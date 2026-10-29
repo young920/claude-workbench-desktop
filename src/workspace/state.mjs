@@ -1,0 +1,51 @@
+// 工作区共享状态；字段名与拆分前的模块级变量保持一致，便于逐函数对照迁移
+export const app = {
+  workspace: document.querySelector('#workspace'),
+  terminalHost: document.querySelector('#terminalHost'),
+  projectPath: localStorage.getItem('claude-workbench-project-path') || '',
+  workspaceDark: localStorage.getItem('claude-workbench-workspace-theme') === 'dark',
+  projectsExpanded: localStorage.getItem('claude-workbench-projects-expanded') === '1',
+  activeSession: null,
+  socket: null,
+  terminalReconnectTimer: null,
+  terminalReconnectAttempts: 0,
+  terminalConnectionGeneration: 0,
+  terminalSessionAlive: false,
+  terminal: null,
+  fitAddon: null,
+  lastTerminalPtySize: '',
+  terminalCursorVisibilityPending: '',
+  composerVisible: false,
+  composerAttachments: [],
+  promptLibraryItems: [],
+  promptEditingId: '',
+  terminalFontSize: Number(localStorage.getItem('claude-workbench-terminal-font-size')) || 12,
+  view: localStorage.getItem('claude-workbench-view') === 'workspace' ? 'workspace' : 'management',
+  navCollapsed: localStorage.getItem('claude-workbench-nav-collapsed') === '1',
+  sessionsCollapsed: localStorage.getItem('claude-workbench-sessions-collapsed') === '1',
+  filesCollapsed: localStorage.getItem('claude-workbench-files-collapsed') === '1',
+  statuslineVisible: localStorage.getItem('claude-workbench-statusline-visible') !== '0',
+  toolbarVisible: localStorage.getItem('claude-workbench-toolbar-visible') !== '0',
+  collapsedProjects: [],
+  selectedFile: '',
+  lastManagementCrumb: '运行概览',
+  cachedSessions: [], // 主列表全量缓存;搜索过滤只重渲染这份数据,不发请求
+  sessionSearch: '', // 搜索关键字;批量全选基于当前过滤结果
+  bulkMode: false, // 批量管理模式:行首显示复选框
+  bulkSelected: new Set(), // 批量模式勾选的会话 id;innerHTML 全量重建后据此恢复 checked
+  projects: [],
+  lastFileOpen: { path: '', at: 0 },
+  // 内置查看器状态：path 非空表示面板已打开
+  viewer: { path: '', name: '', size: 0, modifiedAt: '', content: '', loading: false, render: 'source' },
+  // 查看器源码视图自动换行；随工作区设置持久化
+  viewerWrap: false,
+  fileTreeRefreshJob: null,
+  fileTreeSignature: '',
+  fileTreeRebuildAt: 0, // 上次全量重建时间；钳制结构变化触发的重建频率
+  fileTreeInteractionAt: 0,
+  fileTreeDragging: false,
+  contextProjectPath: '',
+  fileTreeContextTarget: { path: '', type: '' },
+  sessionActivityMonitors: new Map(),
+  sessionActivityStates: new Map(),
+};

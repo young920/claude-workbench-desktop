@@ -15,6 +15,11 @@ if (!fs.existsSync(path.join(dist, 'index.html'))) throw new Error('Build the fr
 fs.rmSync(destination, { recursive: true, force: true });
 fs.mkdirSync(destination, { recursive: true });
 fs.cpSync(path.join(root, 'server.mjs'), path.join(destination, 'server.mjs'));
+// 后端模块目录与入口同目录分发，server.mjs 通过相对路径导入
+fs.cpSync(path.join(root, 'server'), path.join(destination, 'server'), { recursive: true });
+// statusLine 包装器随包分发：启用时由 toggle 复制到用户目录，安装位置变化不影响已配置的路径
+fs.mkdirSync(path.join(destination, 'resources'), { recursive: true });
+fs.copyFileSync(path.join(root, 'resources', 'statusline-wrapper.mjs'), path.join(destination, 'resources', 'statusline-wrapper.mjs'));
 fs.mkdirSync(path.join(destination, 'scripts'), { recursive: true });
 fs.copyFileSync(path.join(root, 'scripts', 'recycle-workspace-item.ps1'), path.join(destination, 'scripts', 'recycle-workspace-item.ps1'));
 fs.cpSync(dist, path.join(destination, 'dist'), {
@@ -59,6 +64,21 @@ const ptyPrebuild = path.join(modules, 'node-pty', 'prebuilds', 'win32-x64');
 const stagedPrebuild = path.join(stagedModules, 'node-pty', 'prebuilds', 'win32-x64');
 const runtimeFiles = new Set(['conpty.node', 'conpty_console_list.node', 'pty.node', 'winpty-agent.exe', 'winpty.dll']);
 copyPackageFiles(ptyPrebuild, stagedPrebuild, (rel, name) => runtimeFiles.has(name) || (rel.startsWith('conpty' + path.sep) && ['OpenConsole.exe', 'conpty.dll'].includes(name)));
+
+// SDK 运行时模块与服务端同目录，server.mjs 通过相对路径导入
+fs.copyFileSync(path.join(root, 'sdk-runtime.mjs'), path.join(destination, 'sdk-runtime.mjs'));
+copiedFiles++;
+
+// Claude Agent SDK 主包：入口 sdk.mjs 已内联 zod 与 @modelcontextprotocol/sdk（见官方 README），
+// 因此无需复制 peer 依赖；仅排除体积较大且运行时不用的 sourcemap 与文档
+copyPackageFiles(
+  path.join(modules, '@anthropic-ai', 'claude-agent-sdk'),
+  path.join(stagedModules, '@anthropic-ai', 'claude-agent-sdk'),
+  (_rel, name) => !name.endsWith('.map') && !name.endsWith('.md'),
+);
+
+// 原生 CLI 不随安装包分发：按 README 要求由用户预先安装 Claude Code，
+// SDK 运行时通过 resolveExecutable 使用该 CLI；未安装时健康检查会明确报告不可用
 
 const sizes = [];
 function walk(dir) {
